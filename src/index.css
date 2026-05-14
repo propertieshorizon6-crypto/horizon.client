@@ -1,0 +1,27 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'MyriadPro';
+  src: url('/fonts/MYRIADPRO-REGULAR.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'MyriadPro';
+  src: url('/fonts/MYRIADPRO-BOLD.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* Hide scrollbars everywhere the utility class is used */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

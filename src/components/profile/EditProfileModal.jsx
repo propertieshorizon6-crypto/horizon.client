@@ -1,0 +1,228 @@
+
+import { memo, useState, useCallback, useEffect } from 'react';
+import { useUpdateBasicInfo } from '../../hooks/profile/useUpdateProfile';
+import PhoneInput from '../forms/PhoneInput'; 
+
+const EditProfileModal = memo(({ isOpen, onClose, user }) => {
+  const updateMutation = useUpdateBasicInfo();
+
+  const [formData, setFormData] = useState({
+    firstName: user?.firstName || '',
+    lastName:  user?.lastName  || '',
+    phone:     user?.phone     || '',
+    email:     user?.email     || '',
+  });
+
+  const [phoneKey, setPhoneKey] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      // eslint-disable-next-line
+      setFormData({
+        firstName: user.firstName || '',
+        lastName:  user.lastName  || '',
+        phone:     user.phone     || '',
+        email:     user.email     || '',
+      });
+   
+      setPhoneKey(k => k + 1);
+    }
+  }, [user]);
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }, []);
+
+  const handlePhoneChange = useCallback((val) => {
+    setFormData(prev => ({ ...prev, phone: val }));
+  }, []);
+
+  const handleSave = useCallback((e) => {
+    e.preventDefault();
+    updateMutation.mutate(formData, {
+      onSuccess: () => {
+        onClose();
+      },
+    });
+  }, [formData, updateMutation, onClose]);
+
+  const handleCancel = useCallback(() => {
+    // Reset form to original values
+    setFormData({
+      firstName: user?.firstName || '',
+      lastName:  user?.lastName  || '',
+      phone:     user?.phone     || '',
+      email:     user?.email     || '',
+    });
+    
+    setPhoneKey(k => k + 1);
+    onClose();
+  }, [user, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-bold/60 backdrop-blur-sm z-50 animate-in fade-in duration-200"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div
+          className="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto pointer-events-auto animate-in zoom-in-95 duration-200"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="px-6 pt-6 pb-4 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-[22px] font-semibold text-primary font-myriad">
+                  Edit Profile
+                </h2>
+                <p className="text-[15px] text-gray-500 font-myriad mt-1">
+                  Update your personal information
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
+                aria-label="Close"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSave} className="px-6 py-6 space-y-5">
+
+            {/* First Name */}
+            <div>
+              <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 font-myriad mb-2">
+                <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                First Name
+              </label>
+              <input
+                type="text"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[15px] text-gray-700 font-myriad focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                required
+              />
+            </div>
+
+            {/* Last Name */}
+            <div>
+              <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 font-myriad mb-2">
+                <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Last Name
+              </label>
+              <input
+                type="text"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[15px] text-gray-700 font-myriad focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 font-myriad mb-2">
+                <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                </svg>
+                Phone
+              </label>
+              <PhoneInput
+                key={phoneKey}
+                defaultValue={formData.phone}
+                onChange={handlePhoneChange}
+                required
+              />
+              <p className="text-[11px] text-gray-400 font-myriad mt-2">
+                Changing phone may require verification
+              </p>
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="flex items-center gap-2 text-[15px] font-semibold text-gray-700 font-myriad mb-2">
+                <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[15px] text-gray-700 font-myriad focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                required
+              />
+              <p className="text-[11px] text-gray-400 font-myriad mt-2">
+                Changing email may require verification
+              </p>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={updateMutation.isPending}
+                className="flex-1 px-4 py-3.5 rounded-xl border-2 border-gray-200 text-primary font-semibold text-[15px] font-myriad hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={updateMutation.isPending}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-primary text-white font-semibold text-[15px] font-myriad hover:bg-primary-light transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {updateMutation.isPending ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Save Changes
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </>
+  );
+});
+
+EditProfileModal.displayName = 'EditProfileModal';
+export default EditProfileModal;
