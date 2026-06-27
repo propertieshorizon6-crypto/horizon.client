@@ -1,5 +1,5 @@
 
-import { memo, useState, useCallback } from 'react';
+import { memo, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUser } from '../store/slices/authSlice';
@@ -193,22 +193,28 @@ const ProfilePage = memo(() => {
     updateNotifications.mutate(updated);
   }, [updateNotifications, contactPrefs]);
 
+  const saveTimer = useRef(null);
   const toggleInterest = useCallback((type) => {
-    const updated = interestedIn.includes(type)
-      ? interestedIn.filter(i => i !== type)
-      : [...interestedIn, type];
-    setInterestedIn(updated);
-    // Optimistically push to Redux so ExplorePage/SearchPage see it instantly
-    dispatch(updateUser({ preferences: { ...profile?.preferences, interestedIn: updated } }));
-    // Persist to backend
-    updatePreferences.mutate({
-      propertyTypes: updated,
-      locations: profile?.preferences?.locations || [],
-      budget:    profile?.preferences?.budget,
-      amenities: profile?.preferences?.amenities || [],
-      purpose:   profile?.preferences?.purpose   || 'both',
+    setInterestedIn((prev) => {
+      const updated = prev.includes(type)
+        ? prev.filter(i => i !== type)
+        : [...prev, type];
+      // Optimistically push to Redux so ExplorePage/SearchPage see it instantly
+      dispatch(updateUser({ preferences: { ...profile?.preferences, interestedIn: updated } }));
+      // Debounce the persist so rapid multi-select coalesces into one request
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        updatePreferences.mutate({
+          propertyTypes: updated,
+          locations: profile?.preferences?.locations || [],
+          budget:    profile?.preferences?.budget,
+          amenities: profile?.preferences?.amenities || [],
+          purpose:   profile?.preferences?.purpose   || 'both',
+        });
+      }, 600);
+      return updated;
     });
-  }, [interestedIn, profile, updatePreferences, dispatch]);
+  }, [profile, updatePreferences, dispatch]);
 
   // Derived counts
   const savedCount = savedProperties.length;
@@ -301,16 +307,14 @@ const ProfilePage = memo(() => {
                 </svg>
               }
               title="Notifications"
-              subtitle="Push, email & SMS"
+              subtitle="Email updates"
               // badge={messagesCount > 0 ? messagesCount : undefined}
             />
             {showNotifSection && (
               <div className="px-5 pb-5 pt-3 bg-gray-50 border-t border-gray-100">
                 <div className="space-y-4">
                   {[
-                    { key: 'inApp', label: 'In-App Notifications', desc: 'Get notified inside the app' },
                     { key: 'email', label: 'Email Notifications',  desc: 'Receive updates via email' },
-                    { key: 'push',  label: 'Push Notifications',   desc: 'Browser push alerts' },
                   ].map(({ key, label, desc }) => (
                     <div key={key} className="flex items-center justify-between gap-3">
                       <div className="flex-1">
@@ -364,20 +368,17 @@ const ProfilePage = memo(() => {
                     <button
                       key={type}
                       onClick={() => toggleInterest(type)}
-                      disabled={updatePreferences.isPending}
                       className={`px-5 py-2 rounded-full text-[14px] font-semibold font-myriad transition-all capitalize ${
                         interestedIn.includes(type)
                           ? 'bg-secondary text-white shadow-sm'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      } disabled:opacity-50`}
+                      }`}
                     >
                       {type}
                     </button>
                   ))}
                 </div>
-                {updatePreferences.isPending && (
-                  <p className="text-[11px] text-gray-400 font-myriad mt-2">Saving…</p>
-                )}
+                <p className="text-[11px] text-gray-400 font-myriad mt-2">Saved automatically</p>
               </div>
             )}
           </div>

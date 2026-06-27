@@ -26,11 +26,11 @@ export function usePropertiesWithFilters(filters = {}, options = {}) {
       };
     },
 
-    staleTime: 1000 * 60 * 5,  // 5 min
+    staleTime: 1000 * 30,      // 30s → reflect admin changes (e.g. unpublish) promptly
     gcTime: 1000 * 60 * 15,    // 15 min cache
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+
     ...options,
   });
 }
@@ -50,11 +50,11 @@ export function useFeaturedPropertiesFiltered(filters = {}, options = {}) {
       return transformed.properties;  
     },
 
-    staleTime: 1000 * 60 * 15,
+    staleTime: 1000 * 30,          // 30s → near-instant freshness for featured changes
     gcTime: 1000 * 60 * 30,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    
+    refetchOnMount: true,          // refetch when ExplorePage mounts
+    refetchOnWindowFocus: true,    // refetch when user returns to the tab
+
     ...options,
   });
 }
@@ -78,11 +78,11 @@ export function useNewListingsFiltered(filters = {}, options = {}) {
       };
     },
 
-    staleTime: 1000 * 60 * 10,
+    staleTime: 1000 * 30,
     gcTime: 1000 * 60 * 30,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+
     ...options,
   });
 }

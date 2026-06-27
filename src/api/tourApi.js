@@ -14,7 +14,7 @@ export const submitTourRequest = async (propertyId, data) => {
     );
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'Failed to submit tour request');
+    throw new Error(error.response?.data?.error?.message || error.response?.data?.message || 'Failed to submit tour request');
   }
 };
 

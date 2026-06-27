@@ -3,7 +3,7 @@ import Footer from '../../layouts/Footer';
 
 const MAX_PRICE = 10_000_000;
 
-const PROPERTY_TYPES   = ['Any', 'House', 'Loft', 'Apartment', 'Villa', 'Commercial', 'Land', 'Condo', 'Townhouse'];
+const PROPERTY_TYPES   = ['Any', 'House', 'Apartment', 'Villa', 'Commercial', 'Land', 'Condo', 'Townhouse'];
 const LISTING_TYPES    = ['For sale', 'For rent'];
 const BEDROOM_OPTIONS  = ['1', '2', '3', '4', '5+'];
 const BATHROOM_OPTIONS = ['1', '2', '3', '4+'];
