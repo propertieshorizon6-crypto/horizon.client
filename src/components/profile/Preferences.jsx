@@ -1,5 +1,5 @@
 
-import { memo, useState, useEffect, useCallback } from 'react';
+import { memo, useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { updateUser } from '../../store/slices/authSlice';
 import { useUpdatePreferences, useUpdateNotifications } from '../../hooks/profile/useUpdateProfile';
@@ -95,17 +95,20 @@ const Preferences = memo(({ profile }) => {
   const [locations,    setLocations]    = useState(profile?.preferences?.locations    || []);
   // const [showSearch,   setShowSearch]   = useState(false);
 
-  // Sync when profile loads
-  useEffect(() => {
-    if (!profile) return;
+  // Sync local state when a different profile loads. Done during render (React's
+  // "reset state when a prop changes" pattern) rather than in an effect, which
+  // avoids the cascading-render setState-in-effect anti-pattern.
+  const [syncedId, setSyncedId] = useState(profile?._id);
+  if (profile && profile._id !== syncedId) {
+    setSyncedId(profile._id);
     setContactPrefs({
       inApp: profile.notifications?.inApp ?? true,
       email: profile.notifications?.email ?? true,
       push:  profile.notifications?.push  ?? false,
     });
-    if (profile.preferences?.interestedIn) setInterestedIn(profile.preferences.interestedIn);
-    if (profile.preferences?.locations)    setLocations(profile.preferences.locations);
-  }, [profile?._id]);
+    setInterestedIn(profile.preferences?.interestedIn || []);
+    setLocations(profile.preferences?.locations || []);
+  }
 
   // ── Handlers ──
   const toggleContactPref = useCallback((key) => {

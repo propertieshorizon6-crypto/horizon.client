@@ -49,11 +49,8 @@ export const useUpdatePreferences = () => {
   return useMutation({
     mutationFn: updateClientPreferences,
     onSuccess: () => {
-      // Invalidate profile query
+      // Invalidate profile query (no success toast — saves are debounced/auto)
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      
-      // Show success toast
-      toast.success('Preferences updated successfully');
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to update preferences');

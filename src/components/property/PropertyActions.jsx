@@ -1,5 +1,8 @@
 
 import { memo, useCallback, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import SendMessageModal from './SendMessageModal';
 import RequestTourModal from './RequestTourModal';
 
@@ -7,13 +10,32 @@ const PropertyActions = memo(({ agent, property }) => {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showTourModal, setShowTourModal] = useState(false);
 
+  const user = useSelector((state) => state.auth.user);
+  const navigate = useNavigate();
+
+  // Tours and enquiries require a logged-in, email-verified client.
+  const ensureCanContact = useCallback(() => {
+    if (!user) {
+      toast.error('Please log in to continue.');
+      navigate('/login');
+      return false;
+    }
+    if (user.emailVerification === false) {
+      toast.error('Please verify your email before booking.');
+      return false;
+    }
+    return true;
+  }, [user, navigate]);
+
   const handleMessage = useCallback(() => {
+    if (!ensureCanContact()) return;
     setShowMessageModal(true);
-  }, []);
+  }, [ensureCanContact]);
 
   const handleTour = useCallback(() => {
+    if (!ensureCanContact()) return;
     setShowTourModal(true);
-  }, []);
+  }, [ensureCanContact]);
 
   return (
     <>

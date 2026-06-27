@@ -57,11 +57,17 @@ export const useSendMessage = (conversationId) => {
       return { tempId };
     },
 
-    onSuccess: (response, content, context) => {
-      if (context?.tempId) {
-        dispatch(removeOptimisticMessage({ conversationId, tempId: context.tempId }));
+    onSuccess: async (response, content, context) => {
+      try {
+        // Prefix match (no exact) so the messages query actually refetches; await it so
+        // the server message is in cache before we drop the optimistic one — otherwise
+        // the message vanishes until the next poll.
+        await queryClient.invalidateQueries({ queryKey: ['conversation', conversationId] });
+      } finally {
+        if (context?.tempId) {
+          dispatch(removeOptimisticMessage({ conversationId, tempId: context.tempId }));
+        }
       }
-      queryClient.invalidateQueries({ queryKey: ['conversation', conversationId], exact: true });
       queryClient.refetchQueries({ queryKey: ['conversations'], type: 'active' });
     },
 
