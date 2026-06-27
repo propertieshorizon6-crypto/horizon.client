@@ -3,13 +3,12 @@ import axiosInstance from "./axiosInstance";
 const handleResponse = (response) => response.data;
 
 const handleError = (error) => {
-  const message =
-    error?.response?.data?.error ||
-    "Something went wrong";
+  const message = error?.response?.data?.error || "Something went wrong";
 
   return Promise.reject(message);
 };
 
+// test
 export const apiGet = (url, config = {}) =>
   axiosInstance.get(url, config).then(handleResponse).catch(handleError);
 
