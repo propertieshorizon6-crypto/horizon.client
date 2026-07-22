@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectUser } from "../store/slices/authSlice";
 import useRecentSearches from "../hooks/searches/useRecentSearches";
@@ -40,7 +40,6 @@ const GlowChip = ({ children, onRemove }) => (
 
 const SearchPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const query = searchParams.get("q") ?? "";
@@ -258,7 +257,7 @@ const SearchPage = () => {
             query={query}
             onSearch={handleSearch}
             onClearSearch={handleClearSearch}
-            onBack={() => location.key !== 'default' ? navigate(-1) : navigate('/explore')}
+            onBack={() => navigate('/')}
             recentSearches={recent.searches}
             onRemoveRecent={recent.remove}
             onClearAllRecent={recent.clearAll}

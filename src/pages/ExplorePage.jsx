@@ -8,6 +8,7 @@ import useSearchSubmit from "../hooks/utils/useDebounceSearch";
 import { useFeaturedPropertiesFiltered, useNewListingsFiltered } from "../hooks/properties/usePropertiesWithFilters";
 import { useMapProperties } from "../hooks/properties/useMapProperties";
 import useMostViewedProperties from "../hooks/properties/useMostViewedProperties";
+import useOurWorld from "../hooks/useOurWorld";
 import EmptyState from "../components/states/EmptyState";
 import ErrorState from "../components/states/ErrorState";
 import ExploreHeader from "../components/explore/ExploreHeader";
@@ -24,6 +25,14 @@ import auctionLogo from "../assets/icons/auction_logo.png";
 import greenVillage from "../assets/icons/green_village.png";
 import leading from "../assets/icons/Leading.png";
 import tree from "../assets/icons/tree.png";
+
+// Bundled fallbacks — shown only until an admin configures logos in the portal.
+const DEFAULT_SLIDES = [
+  { id: "d1", image: auctionLogo,  label: "AUCTION",   bg: "#ECEAE5", link: null },
+  { id: "d2", image: greenVillage, label: "VILLAGE",   bg: "#B8CAB5", link: null },
+  { id: "d3", image: leading,      label: "LEADING",   bg: "#DDD0B0", link: null },
+  { id: "d4", image: tree,         label: "OUR TREES", bg: "#B8CAB5", link: null },
+];
 
 const ExplorePage = () => {
   const navigate = useNavigate();
@@ -95,13 +104,29 @@ const ExplorePage = () => {
     }
   }, [filters]);
 
-  // --- Our World Section ---
-  const PROMO_SLIDES = [
-    { id: 1, image: auctionLogo,  label: "AUCTION",  bg: "#ECEAE5" },
-    { id: 2, image: greenVillage, label: "VILLAGE",   bg: "#B8CAB5" },
-    { id: 3, image: leading,      label: "LEADING",   bg: "#DDD0B0" },
-    { id: 4, image: tree,         label: "OUR TREES", bg: "#B8CAB5" },
-  ];
+  // --- Our World Section (admin-managed, falls back to bundled defaults) ---
+  const { data: ourWorldLogos } = useOurWorld();
+
+  const PROMO_SLIDES = useMemo(() => {
+    if (!ourWorldLogos?.length) return DEFAULT_SLIDES;
+    return ourWorldLogos.map((l) => ({
+      id: l._id,
+      image: l.image?.url,
+      label: l.label,
+      bg: l.bg || "#ECEAE5",
+      link: l.link || null,
+    }));
+  }, [ourWorldLogos]);
+
+  // External links open in a new tab; in-app paths navigate within the SPA.
+  const openLink = useCallback((link) => {
+    if (!link) return;
+    if (/^https?:\/\//i.test(link)) {
+      window.open(link, "_blank", "noopener,noreferrer");
+    } else {
+      navigate(link);
+    }
+  }, [navigate]);
 
   const recent = useRecentSearches();
   const { submitSearch } = useSearchSubmit({ onSearch: recent.add });
@@ -364,7 +389,9 @@ const ExplorePage = () => {
               />
             </div>
             <button
-              className="text-[12px] font-semibold tracking-[0.2em] font-myriad uppercase"
+              type="button"
+              onClick={() => navigate("/search")}
+              className="text-[12px] font-semibold tracking-[0.2em] font-myriad uppercase cursor-pointer"
               style={{ color: "#C96C38" }}
             >
               EXPLORE →
@@ -373,7 +400,14 @@ const ExplorePage = () => {
 
           <div className="flex gap-7 px-5 overflow-x-auto scrollbar-hide pb-2">
             {PROMO_SLIDES.map((slide) => (
-              <div key={slide.id} className="flex flex-col items-center gap-[10px] flex-shrink-0">
+              <div
+                key={slide.id}
+                onClick={() => openLink(slide.link)}
+                role={slide.link ? "button" : undefined}
+                tabIndex={slide.link ? 0 : undefined}
+                onKeyDown={slide.link ? (e) => { if (e.key === "Enter") openLink(slide.link); } : undefined}
+                className={`flex flex-col items-center gap-[10px] flex-shrink-0 ${slide.link ? "cursor-pointer" : ""}`}
+              >
                 <div
                   className="w-[78px] h-[78px] rounded-full overflow-hidden flex items-center justify-center p-[10px]"
                   style={{ backgroundColor: slide.bg }}
