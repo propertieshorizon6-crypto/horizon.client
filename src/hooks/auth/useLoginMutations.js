@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginUser } from "../../api/authApi";
 import { setAuth } from "../../store/slices/authSlice";
+import { isVerifiedForClientPortal } from "../../utils/roles";
 
 export function useEmailLoginMutation() {
   const navigate = useNavigate();
@@ -18,7 +19,9 @@ export function useEmailLoginMutation() {
     },
 
     onSuccess: (data) => {
-      const isVerified = data.user?.emailVerification === true;
+      // Admins/managers use the client portal with their own credentials to
+      // access the full client interface; don't gate them on email verification.
+      const isVerified = isVerifiedForClientPortal(data.user);
 
       if (!isVerified) {
         

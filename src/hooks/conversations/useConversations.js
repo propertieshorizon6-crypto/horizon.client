@@ -13,9 +13,6 @@ export const useConversations = (filters = {}) => {
   const currentUserId = useSelector(
     (state) => state.auth?.user?._id || state.auth?.user?.id
   );
-  const currentUserRole = useSelector(
-    (state) => state.auth?.user?.role
-  );
 
   const query = useQuery({
     // search is intentionally excluded from the key — filtering is done client-side
@@ -38,15 +35,15 @@ export const useConversations = (filters = {}) => {
 
             if (threads.length === 0) {
               // Conversation with no threads — show as one item
-              allItems.push(normalizeItem(conv, null, currentUserId, currentUserRole));
+              allItems.push(normalizeItem(conv, null, currentUserId));
             } else {
               // One item per thread
               threads.forEach(thread => {
-                allItems.push(normalizeItem(conv, thread, currentUserId, currentUserRole));
+                allItems.push(normalizeItem(conv, thread, currentUserId));
               });
             }
           } catch {
-            allItems.push(normalizeItem(conv, null, currentUserId, currentUserRole));
+            allItems.push(normalizeItem(conv, null, currentUserId));
           }
         })
       );
@@ -98,21 +95,27 @@ export const useConversations = (filters = {}) => {
 
 // ─── Normalize one thread → one list item ────────────────────────────────────
 
-const normalizeItem = (conv, thread, currentUserId, currentUserRole) => {
+const normalizeItem = (conv, thread, currentUserId) => {
   const client = conv.client || {};
-  const isAdmin = currentUserRole === 'admin' || currentUserRole === 'manager';
+  const clientId = client._id || client.id || '';
 
-  const participant = isAdmin
+  // Identify the viewer's role in THIS conversation by ownership, not account role.
+  // When the logged-in user IS the conversation's client (a normal client, or an
+  // admin/manager acting as a client on the client portal) they see "Support".
+  // A staff member viewing someone else's conversation sees that client's info.
+  const isConversationOwner = clientId.toString() === currentUserId?.toString();
+
+  const participant = isConversationOwner
     ? {
-        id:     client._id || client.id || '',
-        name:   [client.firstName, client.lastName].filter(Boolean).join(' ') || 'Client',
-        avatar: client.avatar || null,
-        isOnline: false,
-      }
-    : {
         id:     'support',
         name:   'Support',
         avatar: null,
+        isOnline: false,
+      }
+    : {
+        id:     clientId,
+        name:   [client.firstName, client.lastName].filter(Boolean).join(' ') || 'Client',
+        avatar: client.avatar || null,
         isOnline: false,
       };
 
@@ -140,11 +143,10 @@ const normalizeItem = (conv, thread, currentUserId, currentUserRole) => {
   const lastSenderId = lastMsg?.sender?._id || lastMsg?.sender?.id || lastMsg?.sender || '';
   const lastMessageIsFromMe = lastSenderId.toString() === currentUserId?.toString();
 
-  // unreadCounts from thread
-  const clientId = client._id || client.id || '';
-  const isClient = clientId.toString() === currentUserId?.toString();
+  // unreadCounts from thread — the conversation owner reads their own counter,
+  // staff read the shared 'staff' counter.
   const unreadCount = thread
-    ? isClient
+    ? isConversationOwner
       ? (thread.unreadCounts?.[currentUserId] ?? 0)
       : (thread.unreadCounts?.['staff'] ?? 0)
     : 0;
