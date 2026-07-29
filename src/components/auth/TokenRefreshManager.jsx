@@ -2,6 +2,7 @@
 import { useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useTokenRefresh } from '../../hooks/auth/useTokenRefresh';
+import { isRefreshInFlight } from '../../api/refreshClient';
 import { getTokens } from '../../utils/token';
 
 /**
@@ -43,6 +44,9 @@ export default function TokenRefreshManager() {
 
   const checkAndRefreshToken = useCallback(async () => {
     if (!isAuthenticated) return;
+
+    // A request-driven refresh is already running — don't start a second one.
+    if (isRefreshInFlight()) return;
 
     const { accessToken, refreshToken } = getTokens();
 

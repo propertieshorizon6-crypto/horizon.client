@@ -5,8 +5,11 @@ import { getTokens, setTokens as saveTokens, clearTokens } from '../../utils/tok
 // ─── Simple Token Validation ───────────────────────────────────────────────────
 
 const validateToken = (token) => {
-  // Simple check - just verify token exists and is not empty
-  return !!(token && token.trim().length > 0);
+  // Verify the token exists, is not empty, and is not a stringified
+  // undefined/null accidentally written by an earlier setItem.
+  if (!token) return false;
+  const trimmed = token.trim();
+  return trimmed.length > 0 && trimmed !== 'undefined' && trimmed !== 'null';
 };
 
 // ─── Initial State ─────────────────────────────────────────────────────────────

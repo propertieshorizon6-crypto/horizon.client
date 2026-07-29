@@ -3,11 +3,25 @@ import axiosInstance from "./axiosInstance";
 const handleResponse = (response) => response.data;
 
 const handleError = (error) => {
+  // The API returns { success: false, error: { code, message } } — `error` is
+  // an object, so reading it directly yields "[object Object]" and hides every
+  // real failure behind "Something went wrong".
+  const apiError = error?.response?.data?.error;
+
   const message =
-    error?.response?.data?.error ||
+    apiError?.message ||
+    error?.response?.data?.message ||
+    error?.message ||
     "Something went wrong";
 
-  return Promise.reject(message);
+  // Reject with a real Error so `instanceof Error` and stack traces work, but
+  // keep code/details/status so ErrorBanner can still list field errors.
+  const normalized = new Error(message);
+  normalized.code = apiError?.code || null;
+  normalized.details = apiError?.details || [];
+  normalized.status = error?.response?.status ?? null;
+
+  return Promise.reject(normalized);
 };
 
 export const apiGet = (url, config = {}) =>

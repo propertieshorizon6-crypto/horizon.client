@@ -39,8 +39,11 @@ const persistConfig = {
   version: 1,
   storage: resolvedStorage,
   // conversation NOT in whitelist - unreadCount fetched fresh from server
-  // Only persisting UI-critical state
-  whitelist: ['auth', 'saved', 'filters', 'activity'],
+  // auth NOT in whitelist - authSlice persists user/tokens to localStorage
+  // itself. Persisting it here too gives two sources of truth, and REHYDRATE
+  // (which fires after the first render) would overwrite the slice's own
+  // localStorage-derived state with a stale {user, isAuthenticated} snapshot.
+  whitelist: ['saved', 'filters', 'activity'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

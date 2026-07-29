@@ -12,8 +12,10 @@ export const logoutUser = (refreshToken) =>
 export const getCurrentUser = () =>
   apiGet("/auth/me");
 
+// Prefer refreshAccessToken() from ./refreshClient — it is single-flight.
+// skipAuthRefresh stops a 401 here from re-entering the refresh interceptor.
 export const refresh = (refreshToken) =>
-  apiPost("/auth/refresh", { refreshToken });
+  apiPost("/auth/refresh", { refreshToken }, { skipAuthRefresh: true });
 
 export const forgotPassword = (email) =>
   apiPost("/auth/forgot-password", { email, portal: "client" });

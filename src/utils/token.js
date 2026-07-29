@@ -1,6 +1,8 @@
+// Guarded: writing an undefined token stores the literal string "undefined",
+// which passes every truthiness check and then 401s on every request.
 export const setTokens = (accessToken, refreshToken) => {
-  localStorage.setItem("accessToken", accessToken);
-  localStorage.setItem("refreshToken", refreshToken);
+  if (accessToken) localStorage.setItem("accessToken", accessToken);
+  if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
 };
 
 export const getTokens=()=>{
