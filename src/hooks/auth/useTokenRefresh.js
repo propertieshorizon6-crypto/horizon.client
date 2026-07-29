@@ -1,8 +1,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDispatch } from 'react-redux';
-import { refresh } from '../../api/authApi';
-import { getTokens, setTokens, clearTokens } from '../../utils/token';
+import { refreshAccessToken } from '../../api/refreshClient';
 import { setAuth, clearAuth } from '../../store/slices/authSlice';
 
 /**
@@ -14,45 +13,25 @@ export const useTokenRefresh = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
+    // refreshAccessToken is single-flight and writes localStorage itself.
+    mutationFn: refreshAccessToken,
 
-      // Get refresh token from localStorage
-      const { refreshToken } = getTokens();
-
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      // Call refresh API
-      const response = await refresh(refreshToken);
-      
-      return response.data;
-    },
-
-    onSuccess: (data) => {
-      const { accessToken, refreshToken: newRefreshToken } = data;
-
-      // Update localStorage
-      setTokens(accessToken, newRefreshToken);
-
-      // Update Redux state
-      dispatch(setAuth({
-        accessToken,
-        refreshToken: newRefreshToken,
-      }));
+    onSuccess: ({ accessToken, refreshToken }) => {
+      // Keep Redux in sync (tokens are already persisted).
+      dispatch(setAuth({ accessToken, refreshToken }));
 
       // Invalidate all queries to refetch with new token
       queryClient.invalidateQueries();
     },
 
     onError: () => {
-      // Clear tokens and logout
-      clearTokens();
+      // refreshAccessToken already cleared storage.
       dispatch(clearAuth());
     },
 
-    retry: 1, // Retry once on failure
-    retryDelay: 1000, // Wait 1 second before retry
+    // Never retry: with rotating refresh tokens the second attempt replays a
+    // token the server has already consumed, guaranteeing a logout.
+    retry: false,
   });
 };
 
