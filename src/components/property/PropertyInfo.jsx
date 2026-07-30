@@ -1,5 +1,6 @@
 
 import { memo } from "react";
+import { getCurrencySymbol } from "../../utils/propertyTransform";
 
 const PropertyInfo = memo(({ property }) => {
   // Split title so the last word gets italic orange styling
@@ -15,11 +16,27 @@ const PropertyInfo = memo(({ property }) => {
     ? new Intl.NumberFormat('en-US').format(rawPrice)
     : property.price;
 
-  // Price per sqft
-  const sqftNum = parseInt((property.area || '').replace(/,/g, ''), 10);
-  const pricePerSqft = rawPrice && sqftNum > 0
-    ? Math.round(rawPrice / sqftNum)
-    : null;
+  const currencySymbol = getCurrencySymbol(rawCurrency);
+  const isRent = property.purpose === 'rent';
+
+  // Price per unit of area.
+  // `area` is a bare number on the detail page ("1000") but a formatted string
+  // on list cards ("1,000 sq ft"), so parse defensively and sniff the unit from
+  // either `areaUnit` or the string itself. Acres must NOT be labelled sqft —
+  // an acre is 43,560 sqft, so mislabelling is off by that factor.
+  const areaNum = parseFloat(String(property.area || '').replace(/,/g, ''));
+  const isAcres = property.areaUnit === 'acres'
+    || /acre/i.test(String(property.area || ''));
+  const areaLabel = isAcres ? 'acre' : 'sqft';
+
+  const pricePerUnit = rawPrice && areaNum > 0 ? rawPrice / areaNum : null;
+
+  // Sub-unit rates are common in ZMW, where rounding to 0 or 1 loses the number.
+  const formattedPerUnit = pricePerUnit === null
+    ? null
+    : pricePerUnit >= 10
+      ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(pricePerUnit)
+      : pricePerUnit.toFixed(2);
 
   return (
     <div className="px-5 pt-5 pb-4">
@@ -79,10 +96,13 @@ const PropertyInfo = memo(({ property }) => {
           <span className="text-[32px] font-bold text-white font-display tracking-tight">
             {formattedNumber}
           </span>
+          {isRent && (
+            <span className="text-[13px] text-white/55 font-display">/mo</span>
+          )}
         </div>
-        {pricePerSqft && (
+        {formattedPerUnit !== null && (
           <span className="text-[13px] text-white/55 font-display">
-            ${pricePerSqft}/sqft
+            {currencySymbol} {formattedPerUnit}/{areaLabel}{isRent ? '/mo' : ''}
           </span>
         )}
       </div>
