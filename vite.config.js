@@ -7,7 +7,6 @@ import eslint from 'vite-plugin-eslint';
 // anything here that the production policy omits will be blocked once deployed.
 const SHARED_CONNECT = [
   'https://api.thehorizonproperties.com',
-  'https://api.saasflow.us',
   'https://nominatim.openstreetmap.org',
   'https://api.bigdatacloud.net',
   'https://photon.komoot.io',
