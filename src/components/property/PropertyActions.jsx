@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import SendMessageModal from './SendMessageModal';
 import RequestTourModal from './RequestTourModal';
-import { isPrivilegedRole } from '../../utils/roles';
+import { needsEmailVerification } from '../../utils/roles';
 
 const PropertyActions = memo(({ agent, property }) => {
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -22,7 +22,7 @@ const PropertyActions = memo(({ agent, property }) => {
       return false;
     }
     // Admins/managers on the client portal skip the email-verification gate.
-    if (user.emailVerification === false && !isPrivilegedRole(user.role)) {
+    if (needsEmailVerification(user)) {
       toast.error('Please verify your email before booking.');
       return false;
     }

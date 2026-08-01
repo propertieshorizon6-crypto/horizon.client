@@ -12,7 +12,7 @@ import ValidatedInput from "../components/forms/ValidatedInput";
 import ErrorBanner from "../components/forms/ErrorBanner";
 import Spinner from "../components/ui/Spinner";
 import AuthPageHeader from "../components/auth/AuthPageHeader";
-import { isVerifiedForClientPortal } from "../utils/roles";
+import { needsEmailVerification } from "../utils/roles";
 
 const VALIDATORS = {
   email: (v) => !v.trim() ? "Email is required"
@@ -66,12 +66,12 @@ export default function LoginPage() {
     emailLoginMutation.mutate({ email, password });
   }, [emailLoginMutation]);
 
-  if (isAuthenticated && isVerifiedForClientPortal(user)) {
-    return <Navigate to="/" replace />;
+  if (isAuthenticated && needsEmailVerification(user)) {
+    return <Navigate to="/verify-email" replace />;
   }
 
-  if (isAuthenticated && user?.emailVerification === false) {
-    return <Navigate to="/verify-email" replace />;
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
   }
 
   return (
