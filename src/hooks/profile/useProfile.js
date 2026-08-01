@@ -22,6 +22,9 @@ const transformProfile = (data) => {
     phone: user.phone,
     role: user.role,
     verified: user.emailVerification || false,
+    // Kept under its backend name too — the auth gates read `emailVerification`,
+    // so this fetch doubles as a self-heal for a stale stored snapshot.
+    emailVerification: user.emailVerification === true,
     profileImage: user.avatar,
     status: user.status,
     createdAt: user.createdAt,
@@ -77,6 +80,7 @@ export const useProfile = (options = {}) => {
         phone: profile.phone,
         role: profile.role,
         verified: profile.verified,
+        emailVerification: profile.emailVerification,
         profileImage: profile.profileImage,
         preferences: profile.preferences,
         notifications: profile.notifications,
