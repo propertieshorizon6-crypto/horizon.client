@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { verifyEmail } from "../../api/authApi";
 import { updateUser } from "../../store/slices/authSlice";
+import { broadcastAuthReload } from "../../utils/authReload";
 import toast from "react-hot-toast";
 
 export default function useVerifyEmail() {
@@ -25,6 +26,10 @@ export default function useVerifyEmail() {
         emailVerification: true,
         verified: true,
       }));
+
+      // Other tabs are still rendering this account as unverified. Reload them,
+      // but not this one — it's about to show the success screen.
+      broadcastAuthReload({ reloadSelf: false });
 
       // Show success message
       toast.success("Email verified successfully! Welcome to Horizon.");
